@@ -1,6 +1,6 @@
 @echo off
 echo Activating virtual environment...
-title MuskEmpire
+title NotPx
 call venv\Scripts\activate
 echo Starting git pull
 git pull

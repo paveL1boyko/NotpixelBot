@@ -27,6 +27,7 @@ class CryptoBotApi(BaseBotApi):
     @error_handler()
     @handle_request("/v1/mining/claim", method="GET")
     async def mining_claim(self, *, response_json: dict) -> dict:
+        self.logger.info(f'Claimed reward <y>+{response_json.get("claimed")}</y>')
         return response_json
 
     @error_handler()

@@ -30,7 +30,8 @@ class BaseBotSettings(BaseSettings):
     bot_app: str = "app"
 
 
-class Settings(BaseBotSettings): ...
+class Settings(BaseBotSettings):
+    CLAIM_REWARD_TIME: int = 3600
 
 
 config = Settings()

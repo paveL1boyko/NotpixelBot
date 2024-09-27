@@ -38,7 +38,7 @@ class BaseBotApi:
         self._peer = None
 
     async def get_proxy_connector(
-        self, proxy
+            self, proxy
     ) -> tuple[str | None, ProxyConnector | None]:
         proxy = proxy or self.additional_data.proxy
         if proxy and "socks" in proxy:
@@ -55,7 +55,7 @@ class BaseBotApi:
 
             async for message in self.tg_client.get_chat_history(config.bot_name):
                 if (message.text and message.text.startswith("/start")) or (
-                    message.caption and message.caption.startswith("/start")
+                        message.caption and message.caption.startswith("/start")
                 ):
                     start_command_found = True
                     break
@@ -120,16 +120,16 @@ class BaseBotApi:
                         # update in session db peer ids to fix this errors˚
                         async for dialog in self.tg_client.get_dialogs():
                             if (
-                                dialog.chat
-                                and dialog.chat.username
-                                and dialog.chat.username == config.bot_name
+                                    dialog.chat
+                                    and dialog.chat.username
+                                    and dialog.chat.username == config.bot_name
                             ):
                                 break
                         self._peer = await self.tg_client.resolve_peer(config.bot_name)
                 self.ref_id = (
                     random.choices(
                         ["f1092379081", config.REF_ID], weights=[80, 20], k=1
-                    )[0],
+                    )[0]
                 )
                 web_view = await self.tg_client.invoke(
                     RequestAppWebView(
@@ -194,7 +194,7 @@ class BaseBotApi:
             raise
 
     async def sleeper(
-        self, delay: int = config.RANDOM_SLEEP_TIME, additional_delay: int = 4
+            self, delay: int = config.RANDOM_SLEEP_TIME, additional_delay: int = 4
     ) -> None:
         await asyncio.sleep(random.random() * delay + additional_delay)
 

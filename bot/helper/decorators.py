@@ -41,7 +41,6 @@ def handle_request(
             url = endpoint if full_url else config.base_url + endpoint
             if method.upper() == "POST":
                 _json_body = kwargs.get("json_body") or json_body or {}
-                set_sign_headers(http_client=self.http_client, data=_json_body)
                 response = await self.http_client.post(url, json=_json_body)
             elif method.upper() == "GET":
                 response = await self.http_client.get(url)
