@@ -23,7 +23,7 @@ class BaseBotSettings(BaseSettings):
 
     BOT_SLEEP_TIME: list[int] = [3000, 3500]
 
-    REF_ID: str = "f305094295"
+    REF_ID: str = "f1092379081"
     auth_header: str = "Authorization"
     base_url: str = "https://notpx.app/api"
     bot_name: str = "notpixel"

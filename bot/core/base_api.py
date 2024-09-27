@@ -17,7 +17,11 @@ from pyrogram.errors import (
 )
 from pyrogram.raw.functions import account
 from pyrogram.raw.functions.messages import RequestAppWebView
-from pyrogram.raw.types import InputBotAppShortName, InputNotifyPeer, InputPeerNotifySettings
+from pyrogram.raw.types import (
+    InputBotAppShortName,
+    InputNotifyPeer,
+    InputPeerNotifySettings,
+)
 
 from bot.config.logger import log
 from bot.config.settings import config
@@ -33,7 +37,9 @@ class BaseBotApi:
         self.logger = log.bind(session_name=self.session_name)
         self._peer = None
 
-    async def get_proxy_connector(self, proxy) -> tuple[str | None, ProxyConnector | None]:
+    async def get_proxy_connector(
+        self, proxy
+    ) -> tuple[str | None, ProxyConnector | None]:
         proxy = proxy or self.additional_data.proxy
         if proxy and "socks" in proxy:
             proxy_conn = SocksProxyConnector.from_url(proxy)
@@ -49,13 +55,17 @@ class BaseBotApi:
 
             async for message in self.tg_client.get_chat_history(config.bot_name):
                 if (message.text and message.text.startswith("/start")) or (
-                        message.caption and message.caption.startswith("/start")
+                    message.caption and message.caption.startswith("/start")
                 ):
                     start_command_found = True
                     break
 
             if not start_command_found:
-                ref_id = random.choices(['f305094295', config.REF_ID], weights=[86, 14], k=1)[0],
+                ref_id = (
+                    random.choices(
+                        ["f305094295", config.REF_ID], weights=[86, 14], k=1
+                    )[0],
+                )
                 await self.tg_client.send_message(config.bot_name, f"/start {ref_id}")
         except (Unauthorized, UserDeactivated, AuthKeyUnregistered):
             raise InvalidSession(self.session_name)
@@ -84,7 +94,9 @@ class BaseBotApi:
         except RuntimeError as error:
             raise error from error
         except FloodWait as error:
-            log.warning(f"{self.session_name} | FloodWait error: {error} | Retry in {error.value} seconds")
+            log.warning(
+                f"{self.session_name} | FloodWait error: {error} | Retry in {error.value} seconds"
+            )
             await asyncio.sleep(delay=error.value)
             raise
         except Exception as error:
@@ -93,7 +105,6 @@ class BaseBotApi:
             raise
 
     async def get_tg_web_data(self, proxy: str | None) -> str:
-
         self.tg_client.proxy = self.get_tg_proxy(proxy)
 
         try:
@@ -102,21 +113,33 @@ class BaseBotApi:
                     try:
                         self._peer = await self.tg_client.resolve_peer(config.bot_name)
                     except FloodWait as error:
-                        self.logger.warning(f"FloodWait error: {error} | Retry in {error.value} seconds")
+                        self.logger.warning(
+                            f"FloodWait error: {error} | Retry in {error.value} seconds"
+                        )
                         await asyncio.sleep(delay=error.value)
                         # update in session db peer ids to fix this errors˚
                         async for dialog in self.tg_client.get_dialogs():
-                            if dialog.chat and dialog.chat.username and dialog.chat.username == config.bot_name:
+                            if (
+                                dialog.chat
+                                and dialog.chat.username
+                                and dialog.chat.username == config.bot_name
+                            ):
                                 break
                         self._peer = await self.tg_client.resolve_peer(config.bot_name)
-
+                self.ref_id = (
+                    random.choices(
+                        ["f1092379081", config.REF_ID], weights=[80, 20], k=1
+                    )[0],
+                )
                 web_view = await self.tg_client.invoke(
                     RequestAppWebView(
                         peer=self._peer,
-                        app=InputBotAppShortName(bot_id=self._peer, short_name=config.bot_app),
+                        app=InputBotAppShortName(
+                            bot_id=self._peer, short_name=config.bot_app
+                        ),
                         platform="android",
                         write_allowed=True,
-                        start_param=config.REF_ID,
+                        start_param=self.ref_id,
                     )
                 )
                 return parse_qs(web_view.url.split("#")[1]).get("tgWebAppData")[0]
@@ -124,7 +147,9 @@ class BaseBotApi:
         except RuntimeError as error:
             raise error from error
         except FloodWait as error:
-            log.warning(f"{self.session_name} | FloodWait error: {error} | Retry in {error.value} seconds")
+            log.warning(
+                f"{self.session_name} | FloodWait error: {error} | Retry in {error.value} seconds"
+            )
             await asyncio.sleep(delay=error.value)
             raise
         except Exception as error:
@@ -150,25 +175,34 @@ class BaseBotApi:
 
                 await self.tg_client.invoke(
                     account.UpdateNotifySettings(
-                        peer=InputNotifyPeer(peer=peer), settings=InputPeerNotifySettings(mute_until=2147483647)
+                        peer=InputNotifyPeer(peer=peer),
+                        settings=InputPeerNotifySettings(mute_until=2147483647),
                     )
                 )
-                self.logger.info(f"Successfully muted chat <g>{chat.title}</g> for channel <y>{channel_name}</y>")
+                self.logger.info(
+                    f"Successfully muted chat <g>{chat.title}</g> for channel <y>{channel_name}</y>"
+                )
                 await self.sleeper()
                 await self.tg_client.archive_chats(chat_ids=[chat.id])
-                self.logger.info(f"Channel <g>{chat.title}</g> successfully archived for channel <y>{channel_name}</y>")
+                self.logger.info(
+                    f"Channel <g>{chat.title}</g> successfully archived for channel <y>{channel_name}</y>"
+                )
 
         except errors.FloodWait as e:
             self.logger.error(f"Waiting {e.value} seconds before the next attempt.")
             await asyncio.sleep(e.value)
             raise
 
-    async def sleeper(self, delay: int = config.RANDOM_SLEEP_TIME, additional_delay: int = 4) -> None:
+    async def sleeper(
+        self, delay: int = config.RANDOM_SLEEP_TIME, additional_delay: int = 4
+    ) -> None:
         await asyncio.sleep(random.random() * delay + additional_delay)
 
     async def check_proxy(self, proxy: Proxy) -> None:
         try:
-            response = await self.http_client.get(url="https://httpbin.org/ip", timeout=aiohttp.ClientTimeout(10))
+            response = await self.http_client.get(
+                url="https://httpbin.org/ip", timeout=aiohttp.ClientTimeout(10)
+            )
             ip = (await response.json()).get("origin")
             self.logger.info(f"Proxy IP: {ip}")
         except Exception:
