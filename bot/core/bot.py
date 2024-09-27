@@ -35,9 +35,9 @@ class CryptoBot(CryptoBotApi):
         proxy, proxy_conn = await self.get_proxy_connector(proxy)
 
         async with aiohttp.ClientSession(
-                headers=headers,
-                connector=proxy_conn,
-                timeout=aiohttp.ClientTimeout(total=60),
+            headers=headers,
+            connector=proxy_conn,
+            timeout=aiohttp.ClientTimeout(total=60),
         ) as http_client:
             self.http_client = http_client
             if proxy:
@@ -52,7 +52,7 @@ class CryptoBot(CryptoBotApi):
                         ...
                     mining_data = MiningData(**await self.mining_status())
                     await self.paint_pixel(mining_data)
-                    if mining_data.fromStart < config.CLAIM_REWARD_TIME:
+                    if mining_data.fromStart > config.CLAIM_REWARD_TIME:
                         await self.mining_claim(mining_data)
 
                     # ws_image = await self.image_ws()
@@ -118,8 +118,6 @@ class CryptoBot(CryptoBotApi):
 
 async def run_bot(tg_client: Client, proxy: str | None, additional_data: dict) -> None:
     try:
-        await CryptoBot(tg_client=tg_client, additional_data=additional_data).run(
-            proxy=proxy
-        )
+        await CryptoBot(tg_client=tg_client, additional_data=additional_data).run(proxy=proxy)
     except RuntimeError:
         log.bind(session_name=tg_client.name).exception("Session error")
