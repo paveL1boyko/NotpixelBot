@@ -1,7 +1,8 @@
 import asyncio
 import random
+import re
 
-import aiohttp
+from aiocache import cached
 from pyrogram import Client
 
 from bot.config.headers import headers
@@ -9,111 +10,110 @@ from bot.config.logger import log
 from bot.config.settings import config
 
 from .api import CryptoBotApi
-from .models import MiningData, SessionData
+from .models import MiningData, SessionData, User
 
 
 class CryptoBot(CryptoBotApi):
     def __init__(self, tg_client: Client, additional_data: dict) -> None:
         super().__init__(tg_client)
-        self.authorized = False
         self.sleep_time = config.BOT_SLEEP_TIME
         self.additional_data: SessionData = SessionData.model_validate(
             {k: v for d in additional_data for k, v in d.items()}
         )
 
-    async def login_to_app(self, proxy: str | None) -> bool:
-        if self.authorized:
-            return True
+    @cached(ttl=config.LOGIN_CACHED_TIME)
+    async def login_to_app(self, proxy: str | None) -> User:
         tg_web_data = await self.get_tg_web_data(proxy=proxy)
         self.http_client.headers[config.auth_header] = f"initData {tg_web_data}"
-        if await self.login():
-            self.authorized = True
-            return True
-        return False
+        res = await self.login()
+        self.logger.info("Successfully logged in 😊🎉")
+        return User(**res)
+
+    async def execute_tasks(self) -> None:
+        for key, value in config.task_ids.items():
+            if self.mining_data.tasks.get(key):
+                continue
+            if "channel:" in key:
+                await self.join_and_archive_channel(channel_name=key.split(":")[1])
+                await self.sleeper(delay=10)
+                await self.check_link_task(task_id=key.split(":")[1], link="channel")
+                continue
+            if "x:" in key:
+                await self.check_link_task(task_id=key.split(":")[1], link="x")
+                await self.sleeper(delay=10)
+                continue
+            if "league" in key and self.user.league not in value.lower():
+                continue
+            if (fr := re.search(r"invite(\d+)", key)) and self.user.friends < int(fr.group(1)):
+                continue
+            if (px := re.search(r"paint(\d+)", key)) and self.user.repaints < int(px.group(1)):
+                continue
+            await self.check_task(task_id=value)
+
+    def _get_next_update_price(self, current_level: int, name: str, helper_data: dict) -> int | None:
+        return helper_data[name]["levels"].get(current_level + 1, {}).get("Price", 1e1000)
+
+    async def auto_upgrade(self, helper_data: dict) -> None:
+        cur_energy_limit = self.mining_data.boosts.energyLimit
+        cur_recharge_speed = self.mining_data.boosts.reChargeSpeed
+        cur_paint_reward = self.mining_data.boosts.paintReward
+        if self.user.balance > self._get_next_update_price(cur_energy_limit, "UpgradeChargeCount", helper_data):
+            return await self.update_boost(json_body={"energyLimit": cur_energy_limit + 1})
+        if self.user.balance > self._get_next_update_price(cur_recharge_speed, "UpgradeChargeRestoration", helper_data):
+            return await self.update_boost(json_body={"energyLimit": cur_energy_limit + 1})
+        if self.user.balance > self._get_next_update_price(cur_paint_reward, "UpgradeRepaint", helper_data):
+            return await self.update_boost(json_body={"energyLimit": cur_energy_limit + 1})
+        return None
+
+    async def paint_random_pixel(self) -> None:
+        for _ in range(self.mining_data.charges):
+            random_pixel = random.randint(100, 990) * 1000 + random.randint(100, 990)
+            data = {
+                "pixelId": random_pixel,
+                "newColor": random.choice(config.COLORS),
+            }
+            res = await self.repaint_start(json_body=data)
+            self.logger.info(
+                f"Painted pixel balance: <y>💰 {res.get('balance'):.2f}</y> Painted pixel: <b>🎨 {random_pixel}</b>"
+            )
+            await self.sleeper(additional_delay=8)
 
     async def run(self, proxy: str | None) -> None:
-        proxy, proxy_conn = await self.get_proxy_connector(proxy)
-
-        async with aiohttp.ClientSession(
-            headers=headers,
-            connector=proxy_conn,
-            timeout=aiohttp.ClientTimeout(total=60),
-        ) as http_client:
-            self.http_client = http_client
-            if proxy:
-                await self.check_proxy(proxy=proxy)
-
+        async with await self.create_http_client(proxy=proxy, headers=headers):
             while True:
                 if self.errors >= config.ERRORS_BEFORE_STOP:
                     self.logger.error("Bot stopped (too many errors)")
                     break
                 try:
-                    if await self.login_to_app(proxy):
-                        ...
-                    mining_data = MiningData(**await self.mining_status())
-                    await self.paint_pixel(mining_data)
-                    if mining_data.fromStart > config.CLAIM_REWARD_TIME:
-                        await self.mining_claim(mining_data)
-
+                    self.user: User = await self.login_to_app(proxy)
+                    self.logger.info(
+                        f"Balance: <y>💰 {self.user.balance:.2f}</y> Friends: <g>👥 {self.user.friends}</g> League: <b>🏆 {self.user.league}</b>"
+                    )
+                    self.mining_data = MiningData(**await self.mining_status())
+                    helper_data = await self.get_helper()
                     # ws_image = await self.image_ws()
+                    if config.PAINT_PIXELS:
+                        await self.paint_random_pixel()
+                    if self.mining_data.fromStart > config.CLAIM_REWARD_TIME:
+                        await self.mining_claim()
+                    if config.EXECUTE_TASKS:
+                        await self.execute_tasks()
+                    if config.AUTO_UPGRADE:
+                        await self.auto_upgrade(helper_data)
                     sleep_time = random.randint(*config.BOT_SLEEP_TIME)
-                    self.logger.info(f"Sleep minutes {sleep_time // 60} minutes")
+                    self.logger.info(f"🛌 Sleep time: {sleep_time // 60} minutes 🕒")
                     await asyncio.sleep(sleep_time)
 
                 except RuntimeError as error:
                     raise error from error
                 except Exception:
                     self.errors += 1
-                    self.authorized = False
+                    await self.login_to_app.cache.clear()
                     self.logger.exception("Unknown error")
                     await self.sleeper(additional_delay=self.errors * 8)
                 else:
                     self.errors = 0
-                    self.authorized = False
-
-    async def paint_pixel(self, mining_data: MiningData) -> None:
-        for _ in range(mining_data.charges):
-            colors = [
-                "#E46E6E",  # rgb(228, 110, 110)
-                "#FFD635",  # rgb(255, 214, 53)
-                "#7EED56",  # rgb(126, 237, 86)
-                "#00CCBF",  # rgb(0, 204, 192)
-                "#51E9F4",  # rgb(81, 233, 244)
-                "#94B3FF",  # rgb(148, 179, 255)
-                "#E4ABFF",  # rgb(228, 171, 255)
-                "#FF99AA",  # rgb(255, 153, 170)
-                "#FFB478",  # rgb(255, 180, 112)
-                "#FFFFFF",  # rgb(255, 255, 255)
-                "#BE0039",  # rgb(190, 0, 57)
-                "#FF9600",  # rgb(255, 150, 0)
-                "#00CC78",  # rgb(0, 204, 120)
-                "#009EAA",  # rgb(0, 158, 170)
-                "#3690EA",  # rgb(54, 144, 234)
-                "#6A5CFF",  # rgb(106, 92, 255)
-                "#B44AC0",  # rgb(180, 74, 192)
-                "#FF3881",  # rgb(255, 56, 129)
-                "#9C6926",  # rgb(156, 105, 38)
-                "#898D90",  # rgb(137, 141, 144)
-                "#6D001A",  # rgb(109, 0, 26)
-                "#BF4300",  # rgb(191, 67, 0)
-                "#00A368",  # rgb(0, 163, 104)
-                "#00756F",  # rgb(0, 117, 111)
-                "#2450A4",  # rgb(36, 80, 164)
-                "#493AC1",  # rgb(73, 58, 193)
-                "#811E9F",  # rgb(129, 30, 159)
-                "#A00357",  # rgb(160, 3, 87)
-                "#6D482F",  # rgb(109, 72, 47)
-                "#000000",  # rgb(0, 0, 0)
-            ]
-
-            random_pixel = random.randint(100, 990) * 1000 + random.randint(100, 990)
-            data = {
-                "pixelId": random_pixel,
-                "newColor": random.choice(colors),
-            }
-            res = await self.repaint_start(json_body=data)
-            self.logger.info(f"Painted pixel balance: <y>{res.get('balance'):.2f}</y>")
-            await self.sleeper()
+                    self.login_to_app.cache_clear()
 
 
 async def run_bot(tg_client: Client, proxy: str | None, additional_data: dict) -> None:

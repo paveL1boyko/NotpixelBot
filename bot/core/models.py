@@ -1,7 +1,6 @@
-from pydantic import BaseModel, Field
+from typing import Any
 
-from pydantic import conint, condecimal
-from typing import Dict, Any
+from pydantic import BaseModel, Field, condecimal, conint
 
 
 class SessionData(BaseModel):
@@ -31,5 +30,22 @@ class MiningData(BaseModel):
     maxCharges: conint(ge=0)
     reChargeTimer: int
     reChargeSpeed: int
-    goods: Dict[str, Any]
-    tasks: Dict[str, Any]
+    goods: dict[str, Any]
+    tasks: dict[str, Any]
+
+
+class User(BaseModel):
+    id: int
+    firstName: str
+    lastName: str
+    balance: int
+    repaints: int
+    score: int | None = None
+    language: str
+    friends: int
+    intro: bool
+    userPic: str
+    league: str
+    squad: dict
+    goods: list | None = None
+    refLimit: int
