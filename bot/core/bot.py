@@ -42,22 +42,14 @@ class CryptoBot(CryptoBotApi):
                 continue
             if "league" in key and self.user.league not in key.lower():
                 continue
-            if (fr := re.search(r"invite(\d+)", key)) and self.user.friends < int(
-                fr.group(1)
-            ):
+            if (fr := re.search(r"invite(\d+)", key)) and self.user.friends < int(fr.group(1)):
                 continue
-            if (px := re.search(r"paint(\d+)", key)) and self.user.repaints < int(
-                px.group(1)
-            ):
+            if (px := re.search(r"paint(\d+)", key)) and self.user.repaints < int(px.group(1)):
                 continue
             await self.check_task(task_id=key)
 
-    def _get_next_update_price(
-        self, current_level: int, name: str, helper_data: dict
-    ) -> int | None:
-        return (
-            helper_data[name]["levels"].get(current_level + 1, {}).get("Price", 1e1000)
-        )
+    def _get_next_update_price(self, current_level: int, name: str, helper_data: dict) -> int | None:
+        return helper_data[name]["levels"].get(current_level + 1, {}).get("Price", 1e1000)
 
     async def auto_upgrade(self, helper_data: dict) -> None:
         cur_energy_limit = self.mining_data.boosts.energyLimit
@@ -71,9 +63,7 @@ class CryptoBot(CryptoBotApi):
             cur_recharge_speed, "UpgradeChargeRestoration", helper_data
         ):
             return await self.update_boost("reChargeSpeed")
-        if self.mining_data.userBalance > self._get_next_update_price(
-            cur_paint_reward, "UpgradeRepaint", helper_data
-        ):
+        if self.mining_data.userBalance > self._get_next_update_price(cur_paint_reward, "UpgradeRepaint", helper_data):
             return await self.update_boost("paintReward")
         return None
 
@@ -123,15 +113,10 @@ class CryptoBot(CryptoBotApi):
                     await self.login_to_app.cache.clear()
                     self.logger.exception("Unknown error")
                     await self.sleeper(additional_delay=self.errors * 8)
-                else:
-                    self.errors = 0
-                    self.login_to_app.cache_clear()
 
 
 async def run_bot(tg_client: Client, proxy: str | None, additional_data: dict) -> None:
     try:
-        await CryptoBot(tg_client=tg_client, additional_data=additional_data).run(
-            proxy=proxy
-        )
+        await CryptoBot(tg_client=tg_client, additional_data=additional_data).run(proxy=proxy)
     except RuntimeError:
         log.bind(session_name=tg_client.name).exception("Session error")
