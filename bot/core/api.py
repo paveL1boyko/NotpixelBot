@@ -59,7 +59,7 @@ class CryptoBotApi(BaseBotApi):
         )
         res = await response.json()
         self.logger.success(
-            f'Boost <y>🎉 "{boost_id}"</y> upgrades successfully ✅ status: {res}'
+            f'Boost <y>🎉 "{boost_id}"</y> upgrades successfully ✅'
         )
 
     @error_handler()
