@@ -53,7 +53,7 @@ class CryptoBotApi(BaseBotApi):
         )
 
     @error_handler()
-    async def update_boost(self, *, boost_id: str) -> None:
+    async def update_boost(self, boost_id: str) -> None:
         response = await self.http_client.get(
             config.base_url + f"/mining/boost/check/{boost_id}", ssl=False
         )

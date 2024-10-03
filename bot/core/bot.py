@@ -66,21 +66,15 @@ class CryptoBot(CryptoBotApi):
         if self.user.balance > self._get_next_update_price(
             cur_energy_limit, "UpgradeChargeCount", helper_data
         ):
-            return await self.update_boost(
-                json_body={"energyLimit": cur_energy_limit + 1}
-            )
+            return await self.update_boost("energyLimit")
         if self.user.balance > self._get_next_update_price(
             cur_recharge_speed, "UpgradeChargeRestoration", helper_data
         ):
-            return await self.update_boost(
-                json_body={"energyLimit": cur_energy_limit + 1}
-            )
+            return await self.update_boost("reChargeSpeed")
         if self.user.balance > self._get_next_update_price(
             cur_paint_reward, "UpgradeRepaint", helper_data
         ):
-            return await self.update_boost(
-                json_body={"energyLimit": cur_energy_limit + 1}
-            )
+            return await self.update_boost("paintReward")
         return None
 
     async def paint_random_pixel(self) -> None:
