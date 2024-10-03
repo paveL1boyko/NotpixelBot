@@ -30,39 +30,57 @@ class CryptoBot(CryptoBotApi):
         return User(**res)
 
     async def execute_tasks(self) -> None:
-        for key, value in config.task_ids.items():
+        for key in config.task_ids:
             if self.mining_data.tasks.get(key):
                 continue
-            if "channel:" in key:
-                await self.join_and_archive_channel(channel_name=key.split(":")[1])
+            if ":" in key:
+                link_type, task_id = key.split(":")
+                if "channel" in link_type:
+                    await self.join_and_archive_channel(channel_name=key.split(":")[1])
                 await self.sleeper(delay=10)
-                await self.check_link_task(task_id=key.split(":")[1], link="channel")
+                await self.check_link_task(link=link_type, task_id=task_id)
                 continue
-            if "x:" in key:
-                await self.check_link_task(task_id=key.split(":")[1], link="x")
-                await self.sleeper(delay=10)
+            if "league" in key and self.user.league not in key.lower():
                 continue
-            if "league" in key and self.user.league not in value.lower():
+            if (fr := re.search(r"invite(\d+)", key)) and self.user.friends < int(
+                fr.group(1)
+            ):
                 continue
-            if (fr := re.search(r"invite(\d+)", key)) and self.user.friends < int(fr.group(1)):
+            if (px := re.search(r"paint(\d+)", key)) and self.user.repaints < int(
+                px.group(1)
+            ):
                 continue
-            if (px := re.search(r"paint(\d+)", key)) and self.user.repaints < int(px.group(1)):
-                continue
-            await self.check_task(task_id=value)
+            await self.check_task(task_id=key)
 
-    def _get_next_update_price(self, current_level: int, name: str, helper_data: dict) -> int | None:
-        return helper_data[name]["levels"].get(current_level + 1, {}).get("Price", 1e1000)
+    def _get_next_update_price(
+        self, current_level: int, name: str, helper_data: dict
+    ) -> int | None:
+        return (
+            helper_data[name]["levels"].get(current_level + 1, {}).get("Price", 1e1000)
+        )
 
     async def auto_upgrade(self, helper_data: dict) -> None:
         cur_energy_limit = self.mining_data.boosts.energyLimit
         cur_recharge_speed = self.mining_data.boosts.reChargeSpeed
         cur_paint_reward = self.mining_data.boosts.paintReward
-        if self.user.balance > self._get_next_update_price(cur_energy_limit, "UpgradeChargeCount", helper_data):
-            return await self.update_boost(json_body={"energyLimit": cur_energy_limit + 1})
-        if self.user.balance > self._get_next_update_price(cur_recharge_speed, "UpgradeChargeRestoration", helper_data):
-            return await self.update_boost(json_body={"energyLimit": cur_energy_limit + 1})
-        if self.user.balance > self._get_next_update_price(cur_paint_reward, "UpgradeRepaint", helper_data):
-            return await self.update_boost(json_body={"energyLimit": cur_energy_limit + 1})
+        if self.user.balance > self._get_next_update_price(
+            cur_energy_limit, "UpgradeChargeCount", helper_data
+        ):
+            return await self.update_boost(
+                json_body={"energyLimit": cur_energy_limit + 1}
+            )
+        if self.user.balance > self._get_next_update_price(
+            cur_recharge_speed, "UpgradeChargeRestoration", helper_data
+        ):
+            return await self.update_boost(
+                json_body={"energyLimit": cur_energy_limit + 1}
+            )
+        if self.user.balance > self._get_next_update_price(
+            cur_paint_reward, "UpgradeRepaint", helper_data
+        ):
+            return await self.update_boost(
+                json_body={"energyLimit": cur_energy_limit + 1}
+            )
         return None
 
     async def paint_random_pixel(self) -> None:
@@ -118,6 +136,8 @@ class CryptoBot(CryptoBotApi):
 
 async def run_bot(tg_client: Client, proxy: str | None, additional_data: dict) -> None:
     try:
-        await CryptoBot(tg_client=tg_client, additional_data=additional_data).run(proxy=proxy)
+        await CryptoBot(tg_client=tg_client, additional_data=additional_data).run(
+            proxy=proxy
+        )
     except RuntimeError:
         log.bind(session_name=tg_client.name).exception("Session error")

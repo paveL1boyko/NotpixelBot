@@ -6,7 +6,9 @@ NotPX Bot
 
 
 class BaseBotSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_ignore_empty=True, extra="allow")
+    model_config = SettingsConfigDict(
+        env_file=".env", env_ignore_empty=True, extra="allow"
+    )
 
     API_ID: int
     API_HASH: str
@@ -67,17 +69,17 @@ class Settings(BaseBotSettings):
         "#6D482F",  # rgb(109, 72, 47)
         "#000000",  # rgb(0, 0, 0)
     ]
-    task_ids: dict[str, str] = {
-        "leagueBonusSilver": "leagueBonusSilver",
-        "leagueBonusGold": "leagueBonusGold",
-        "leagueBonusPlatinum": "leagueBonusPlatinum",
-        "paint20pixels": "paint20pixels",
-        "invite1Fren": "invite1Fren",
-        "invite3Fren": "invite3Fren",
-        "x:notpixel": "notPixelX",
-        "x:notcoin": "notCoinX",
-        "channel:notpixel_channel": "notPixelChannel",
-        "channel:notcoin": "notCoinChannel",
+    task_ids: list[str] = {
+        "leagueBonusSilver",
+        "leagueBonusGold",
+        "leagueBonusPlatinum",
+        "paint20pixels",
+        "invite1Fren",
+        "invite3Fren",
+        "x:notpixel",
+        "x:notcoin",
+        "channel:notpixel_channel",
+        "channel:notcoin",
     }
 
 
