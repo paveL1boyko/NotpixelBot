@@ -1,6 +1,6 @@
 from typing import Any
 
-from pydantic import BaseModel, Field, condecimal, conint
+from pydantic import BaseModel, Field, conint
 
 
 class SessionData(BaseModel):
@@ -15,19 +15,19 @@ class Boosts(BaseModel):
 
 
 class MiningData(BaseModel):
-    coins: condecimal(ge=0)
-    speedPerSecond: condecimal(ge=0)
+    coins: float
+    speedPerSecond: float
     fromStart: int
     fromUpdate: int
     maxMiningTime: int
-    claimed: condecimal(ge=0)
+    claimed: float
     boosts: Boosts
-    repaintsTotal: conint(ge=0)
-    userBalance: condecimal(ge=0)
+    repaintsTotal: int
+    userBalance: float
     activated: bool
     league: str
-    charges: conint(ge=0)
-    maxCharges: conint(ge=0)
+    charges: int
+    maxCharges: int
     reChargeTimer: int
     reChargeSpeed: int
     goods: dict[str, Any]

@@ -63,15 +63,15 @@ class CryptoBot(CryptoBotApi):
         cur_energy_limit = self.mining_data.boosts.energyLimit
         cur_recharge_speed = self.mining_data.boosts.reChargeSpeed
         cur_paint_reward = self.mining_data.boosts.paintReward
-        if self.user.balance > self._get_next_update_price(
+        if self.mining_data.userBalance > self._get_next_update_price(
             cur_energy_limit, "UpgradeChargeCount", helper_data
         ):
             return await self.update_boost("energyLimit")
-        if self.user.balance > self._get_next_update_price(
+        if self.mining_data.userBalance > self._get_next_update_price(
             cur_recharge_speed, "UpgradeChargeRestoration", helper_data
         ):
             return await self.update_boost("reChargeSpeed")
-        if self.user.balance > self._get_next_update_price(
+        if self.mining_data.userBalance > self._get_next_update_price(
             cur_paint_reward, "UpgradeRepaint", helper_data
         ):
             return await self.update_boost("paintReward")
@@ -98,11 +98,11 @@ class CryptoBot(CryptoBotApi):
                     break
                 try:
                     self.user: User = await self.login_to_app(proxy)
-                    self.logger.info(
-                        f"Balance: <y>💰 {self.user.balance:.2f}</y> Friends: <g>👥 {self.user.friends}</g> League: <b>🏆 {self.user.league}</b>"
-                    )
                     self.mining_data = MiningData(**await self.mining_status())
                     helper_data = await self.get_helper()
+                    self.logger.info(
+                        f"Balance: <y>💰 {self.mining_data.userBalance:.2f}</y> Friends: <g>👥 {self.user.friends}</g> League: <b>🏆 {self.user.league}</b>"
+                    )
                     # ws_image = await self.image_ws()
                     if config.PAINT_PIXELS:
                         await self.paint_random_pixel()
