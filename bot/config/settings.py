@@ -13,6 +13,9 @@ class BaseBotSettings(BaseSettings):
     API_ID: int
     API_HASH: str
 
+    NIGHT_MOD: bool = True
+    NIGHT_TIME: list[int] = [23, 6]
+
     LOGIN_CACHED_TIME: int = 3600
     SLEEP_BETWEEN_START: list[int] = [10, 20]
     SESSION_AC_DELAY: int = 10
