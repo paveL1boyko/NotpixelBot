@@ -58,7 +58,7 @@ async def is_current_hour_in_range(
         )
         await asyncio.sleep(
             hours_to_sleep * 3600
-            + random.uniform(config.BOT_SLEEP_TIME * 5, config.BOT_SLEEP_TIME * 20)
+            + random.randint(config.BOT_SLEEP_TIME * 5, config.BOT_SLEEP_TIME * 20)
         )
 
     return result
