@@ -128,7 +128,7 @@ class CryptoBot(CryptoBotApi):
                     self.errors += 1
                     await self.login_to_app.cache.clear()
                     self.logger.exception("Unknown error")
-                    await self.sleeper(additional_delay=self.errors * 8)
+                    await self.sleeper(additional_delay=self.errors * 25)
 
 
 async def run_bot(tg_client: Client, proxy: str | None, additional_data: dict) -> None:

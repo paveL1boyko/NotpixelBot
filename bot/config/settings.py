@@ -19,7 +19,7 @@ class BaseBotSettings(BaseSettings):
     LOGIN_CACHED_TIME: int = 1700
     SLEEP_BETWEEN_START: list[int] = [10, 20]
     SESSION_AC_DELAY: int = 10
-    ERRORS_BEFORE_STOP: int = 5
+    ERRORS_BEFORE_STOP: int = 6
     USE_PROXY_FROM_FILE: bool = False
     ADD_LOCAL_MACHINE_AS_IP: bool = False
 
