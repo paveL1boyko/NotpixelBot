@@ -16,7 +16,7 @@ class BaseBotSettings(BaseSettings):
     NIGHT_MOD: bool = True
     NIGHT_TIME: list[int] = [23, 6]
 
-    LOGIN_CACHED_TIME: int = 3600
+    LOGIN_CACHED_TIME: int = 1700
     SLEEP_BETWEEN_START: list[int] = [10, 20]
     SESSION_AC_DELAY: int = 10
     ERRORS_BEFORE_STOP: int = 5
