@@ -5,9 +5,9 @@ import yaml
 from aiocache import Cache, cached
 from pyrogram import Client
 
+from bot.config.settings import config
 from bot.helper.decorators import error_handler, handle_request
 
-from ..config.settings import config
 from .base_api import BaseBotApi
 
 
@@ -43,9 +43,7 @@ class CryptoBotApi(BaseBotApi):
 
     @error_handler()
     async def check_task(self, *, task_id: str) -> dict:
-        response = await self.http_client.get(
-            config.base_url + f"/mining/task/check/{task_id}"
-        )
+        response = await self.http_client.get(config.base_url + f"/mining/task/check/{task_id}")
         res = await response.json()
         self.logger.success(
             f'Task <y>🎉 "{task_id}"</y> executed successfully ✅ status: {res}',
@@ -54,25 +52,15 @@ class CryptoBotApi(BaseBotApi):
 
     @error_handler()
     async def update_boost(self, boost_id: str) -> None:
-        response = await self.http_client.get(
-            config.base_url + f"/mining/boost/check/{boost_id}", ssl=False
-        )
+        response = await self.http_client.get(config.base_url + f"/mining/boost/check/{boost_id}", ssl=False)
         res = await response.json()
-        self.logger.success(
-            f'Boost <y>🎉 "{boost_id}"</y> upgrades successfully ✅'
-        )
+        self.logger.success(f'Boost <y>🎉 "{boost_id}"</y> upgrades successfully ✅')
 
     @error_handler()
-    async def check_link_task(
-        self, *, link: Literal["x", "channel"], task_id: str
-    ) -> None:
-        response = await self.http_client.get(
-            config.base_url + f"/mining/task/check/{link}?name={task_id}", ssl=False
-        )
+    async def check_link_task(self, *, link: Literal["x", "channel"], task_id: str) -> None:
+        response = await self.http_client.get(config.base_url + f"/mining/task/check/{link}?name={task_id}", ssl=False)
         res = await response.json()
-        self.logger.success(
-            f'Task <y>🎉 "{task_id}"</y> executed successfully ✅ status: {res}'
-        )
+        self.logger.success(f'Task <y>🎉 "{task_id}"</y> executed successfully ✅ status: {res}')
 
     @cached(ttl=10 * 60 * 60, cache=Cache.MEMORY)
     @error_handler()
