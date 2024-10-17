@@ -25,7 +25,7 @@ class BaseBotSettings(BaseSettings):
 
     RANDOM_SLEEP_TIME: int = 8
 
-    BOT_SLEEP_TIME: list[int] = [3000, 3500]
+    BOT_SLEEP_TIME: list[int] = [1800, 2100]
 
     REF_ID: str = "f1092379081_s664035"
     auth_header: str = "Authorization"
