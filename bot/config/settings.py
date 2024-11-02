@@ -25,7 +25,7 @@ class BaseBotSettings(BaseSettings):
 
     RANDOM_SLEEP_TIME: int = 8
 
-    BOT_SLEEP_TIME: list[int] = [1800, 2100]
+    BOT_SLEEP_TIME: list[int] = [800, 1200]
 
     REF_ID: str = "f1092379081_s664035"
     auth_header: str = "Authorization"
@@ -72,6 +72,7 @@ class Settings(BaseBotSettings):
         "#6D482F",  # rgb(109, 72, 47)
         "#000000",  # rgb(0, 0, 0)
     ]
+    TEMPLATE_ID: int = 6989019093
     task_ids: list[str] = {
         "leagueBonusSilver",
         "leagueBonusGold",

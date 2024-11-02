@@ -42,8 +42,25 @@ class CryptoBotApi(BaseBotApi):
         return response_json
 
     @error_handler()
+    @handle_request(f"/image/template/subscribe/{config.TEMPLATE_ID}")
+    async def get_all_templates(self, *, response_json: dict, json_body: dict) -> dict:
+        return response_json
+
+    @error_handler()
+    @handle_request(f"/image/template/subscribe/{config.TEMPLATE_ID}")
+    async def get_template(self, *, response_json: dict, json_body: dict) -> dict:
+        return response_json
+
+    @error_handler()
+    @handle_request(f"/image/template/subscribe/{config.TEMPLATE_ID}", method="PUT")
+    async def set_template(self, *, response_json: dict) -> dict:
+        return response_json
+
+    @error_handler()
     async def check_task(self, *, task_id: str) -> dict:
-        response = await self.http_client.get(config.base_url + f"/mining/task/check/{task_id}")
+        response = await self.http_client.get(
+            config.base_url + f"/mining/task/check/{task_id}"
+        )
         res = await response.json()
         self.logger.success(
             f'Task <y>🎉 "{task_id}"</y> executed successfully ✅ status: {res}',
@@ -52,15 +69,23 @@ class CryptoBotApi(BaseBotApi):
 
     @error_handler()
     async def update_boost(self, boost_id: str) -> None:
-        response = await self.http_client.get(config.base_url + f"/mining/boost/check/{boost_id}", ssl=False)
+        response = await self.http_client.get(
+            config.base_url + f"/mining/boost/check/{boost_id}", ssl=False
+        )
         res = await response.json()
         self.logger.success(f'Boost <y>🎉 "{boost_id}"</y> upgrades successfully ✅')
 
     @error_handler()
-    async def check_link_task(self, *, link: Literal["x", "channel"], task_id: str) -> None:
-        response = await self.http_client.get(config.base_url + f"/mining/task/check/{link}?name={task_id}", ssl=False)
+    async def check_link_task(
+        self, *, link: Literal["x", "channel"], task_id: str
+    ) -> None:
+        response = await self.http_client.get(
+            config.base_url + f"/mining/task/check/{link}?name={task_id}", ssl=False
+        )
         res = await response.json()
-        self.logger.success(f'Task <y>🎉 "{task_id}"</y> executed successfully ✅ status: {res}')
+        self.logger.success(
+            f'Task <y>🎉 "{task_id}"</y> executed successfully ✅ status: {res}'
+        )
 
     @cached(ttl=10 * 60 * 60, cache=Cache.MEMORY)
     @error_handler()

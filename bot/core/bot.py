@@ -68,6 +68,9 @@ class CryptoBot(CryptoBotApi):
             return await self.update_boost("paintReward")
         return None
 
+    async def get_template(self):
+        res = await self.get_template_data()
+
     async def paint_random_pixel(self) -> None:
         for _ in range(self.mining_data.charges):
             random_pixel = random.randint(100, 990) * 1000 + random.randint(100, 990)
