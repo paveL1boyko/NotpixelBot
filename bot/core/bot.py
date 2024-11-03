@@ -42,14 +42,22 @@ class CryptoBot(CryptoBotApi):
                 continue
             if "league" in key and self.user.league not in key.lower():
                 continue
-            if (fr := re.search(r"invite(\d+)", key)) and self.user.friends < int(fr.group(1)):
+            if (fr := re.search(r"invite(\d+)", key)) and self.user.friends < int(
+                fr.group(1)
+            ):
                 continue
-            if (px := re.search(r"paint(\d+)", key)) and self.user.repaints < int(px.group(1)):
+            if (px := re.search(r"paint(\d+)", key)) and self.user.repaints < int(
+                px.group(1)
+            ):
                 continue
             await self.check_task(task_id=key)
 
-    def _get_next_update_price(self, current_level: int, name: str, helper_data: dict) -> int | None:
-        return helper_data[name]["levels"].get(current_level + 1, {}).get("Price", 1e1000)
+    def _get_next_update_price(
+        self, current_level: int, name: str, helper_data: dict
+    ) -> int | None:
+        return (
+            helper_data[name]["levels"].get(current_level + 1, {}).get("Price", 1e1000)
+        )
 
     async def auto_upgrade(self, helper_data: dict) -> None:
         cur_energy_limit = self.mining_data.boosts.energyLimit
@@ -63,20 +71,24 @@ class CryptoBot(CryptoBotApi):
             cur_recharge_speed, "UpgradeChargeRestoration", helper_data
         ):
             return await self.update_boost("reChargeSpeed")
-        if self.mining_data.userBalance > self._get_next_update_price(cur_paint_reward, "UpgradeRepaint", helper_data):
+        if self.mining_data.userBalance > self._get_next_update_price(
+            cur_paint_reward, "UpgradeRepaint", helper_data
+        ):
             return await self.update_boost("paintReward")
         return None
 
     async def paint_random_pixel(self) -> None:
         for _ in range(self.mining_data.charges):
-            random_pixel = random.randint(*config.AREA_TO_REPAINT_Y) * 1000 + random.randint(*config.AREA_TO_REPAINT_X)
+            random_pixel = random.randint(
+                *config.AREA_TO_REPAINT_Y
+            ) * 1000 + random.randint(*config.AREA_TO_REPAINT_X)
             data = {
                 "pixelId": random_pixel,
                 "newColor": config.REPAINT_COLOR_FOR_TEMPLATE,
             }
             res = await self.repaint_start(json_body=data)
             self.logger.info(
-                f"Painted pixel balance: <y>💰 {self.mining_data.userBalance - res.get('balance'):.2f}</y> Painted pixel: <b>🎨 {random_pixel}</b> with color <blue>{config.REPAINT_COLOR_FOR_TEMPLATE}</blue>"
+                f"Painted pixel balance: <y>💰 {res.get('balance') - self.mining_data.userBalance:.2f}</y> Painted pixel: <b>🎨 {random_pixel}</b> with color <blue>{config.REPAINT_COLOR_FOR_TEMPLATE}</blue>"
             )
             await self.sleeper(additional_delay=8)
 
@@ -87,7 +99,9 @@ class CryptoBot(CryptoBotApi):
                     self.logger.error("Bot stopped (too many errors)")
                     break
                 try:
-                    if config.NIGHT_MOD and await is_current_hour_in_range(*config.NIGHT_TIME, self.logger):
+                    if config.NIGHT_MOD and await is_current_hour_in_range(
+                        *config.NIGHT_TIME, self.logger
+                    ):
                         continue
 
                     self.user: User = await self.login_to_app(proxy)
@@ -99,14 +113,18 @@ class CryptoBot(CryptoBotApi):
                     # ws_image = await self.image_ws()
                     res = await self.get_my_template()
                     if res:
-                        self.logger.info(f"Using temlate with id <g>{config.TEMPLATE_ID}</g> to see image {res.url}")
+                        self.logger.info(
+                            f"Using temlate with id <g>{config.TEMPLATE_ID}</g> to see image {res.url}"
+                        )
                     if not res or res.id != config.TEMPLATE_ID:
                         res_ = await self.get_all_templates()
                         if str(config.TEMPLATE_ID) in str(res_):
                             await self.set_template()
-                            self.logger.info(f"Template updated to id <g>{config.TEMPLATE_ID}</g>")
-                        else:
-                            self.logger.error(f"Template with this id <g>{config.TEMPLATE_ID}</g> does not exist")
+                            self.logger.info(
+                                f"Template updated to id <g>{config.TEMPLATE_ID}</g>"
+                            )
+                        # else:
+                        #     self.logger.error(f"Template with this id <g>{config.TEMPLATE_ID}</g> does not exist")
 
                     if config.PAINT_PIXELS:
                         await self.paint_random_pixel()
@@ -131,6 +149,8 @@ class CryptoBot(CryptoBotApi):
 
 async def run_bot(tg_client: Client, proxy: str | None, additional_data: dict) -> None:
     try:
-        await CryptoBot(tg_client=tg_client, additional_data=additional_data).run(proxy=proxy)
+        await CryptoBot(tg_client=tg_client, additional_data=additional_data).run(
+            proxy=proxy
+        )
     except RuntimeError:
         log.bind(session_name=tg_client.name).exception("Session error")
