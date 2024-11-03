@@ -88,7 +88,7 @@ class CryptoBot(CryptoBotApi):
             }
             res = await self.repaint_start(json_body=data)
             self.logger.info(
-                f"Painted pixel balance: <y>💰 {res.get('balance') - self.mining_data.userBalance:.2f}</y> Painted pixel: <b>🎨 {random_pixel}</b> with color <blue>{config.REPAINT_COLOR_FOR_TEMPLATE}</blue>"
+                f"Painted pixel balance: <y>💰 {int(res.get('balance') - self.mining_data.userBalance):.2f}</y> Painted pixel: <b>🎨 {random_pixel}</b> with color <blue>{config.REPAINT_COLOR_FOR_TEMPLATE}</blue>"
             )
             await self.sleeper(additional_delay=8)
 
