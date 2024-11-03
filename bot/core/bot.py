@@ -2,7 +2,6 @@ import asyncio
 import random
 import re
 
-from aiocache import cached
 from pyrogram import Client
 
 from bot.config.headers import headers
@@ -68,19 +67,16 @@ class CryptoBot(CryptoBotApi):
             return await self.update_boost("paintReward")
         return None
 
-    async def get_template(self):
-        res = await self.get_template_data()
-
     async def paint_random_pixel(self) -> None:
         for _ in range(self.mining_data.charges):
-            random_pixel = random.randint(100, 990) * 1000 + random.randint(100, 990)
+            random_pixel = random.randint(*config.AREA_TO_REPAINT_Y) * 1000 + random.randint(*config.AREA_TO_REPAINT_X)
             data = {
                 "pixelId": random_pixel,
-                "newColor": random.choice(config.COLORS),
+                "newColor": config.REPAINT_COLOR_FOR_TEMPLATE,
             }
             res = await self.repaint_start(json_body=data)
             self.logger.info(
-                f"Painted pixel balance: <y>💰 {res.get('balance'):.2f}</y> Painted pixel: <b>🎨 {random_pixel}</b>"
+                f"Painted pixel balance: <y>💰 {self.mining_data.userBalance - res.get('balance'):.2f}</y> Painted pixel: <b>🎨 {random_pixel}</b> with color <blue>{config.REPAINT_COLOR_FOR_TEMPLATE}</blue>"
             )
             await self.sleeper(additional_delay=8)
 
@@ -101,6 +97,17 @@ class CryptoBot(CryptoBotApi):
                         f"Balance: <y>💰 {self.mining_data.userBalance:.2f}</y> Friends: <g>👥 {self.user.friends}</g> League: <b>🏆 {self.user.league}</b>"
                     )
                     # ws_image = await self.image_ws()
+                    res = await self.get_my_template()
+                    if res:
+                        self.logger.info(f"Using temlate with id <g>{config.TEMPLATE_ID}</g> to see image {res.url}")
+                    if not res or res.id != config.TEMPLATE_ID:
+                        res_ = await self.get_all_templates()
+                        if str(config.TEMPLATE_ID) in str(res_):
+                            await self.set_template()
+                            self.logger.info(f"Template updated to id <g>{config.TEMPLATE_ID}</g>")
+                        else:
+                            self.logger.error(f"Template with this id <g>{config.TEMPLATE_ID}</g> does not exist")
+
                     if config.PAINT_PIXELS:
                         await self.paint_random_pixel()
                     if self.mining_data.fromStart > config.CLAIM_REWARD_TIME:

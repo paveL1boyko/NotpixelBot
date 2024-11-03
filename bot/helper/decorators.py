@@ -44,6 +44,8 @@ def handle_request(
                 response = await self.http_client.post(url, json=_json_body, ssl=False)
             elif method.upper() == "GET":
                 response = await self.http_client.get(url, ssl=False)
+            elif method.upper() == "PUT":
+                response = await self.http_client.put(url, ssl=False)
             else:
                 msg = "Unsupported HTTP method"
                 raise ValueError(msg)

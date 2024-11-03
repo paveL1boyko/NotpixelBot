@@ -49,3 +49,13 @@ class User(BaseModel):
     squad: dict
     goods: list | None = None
     refLimit: int
+
+
+class ImageModel(BaseModel):
+    id: int
+    url: str
+    x: int
+    y: int
+    imageSize: int
+    subscribers: int
+    hits: int

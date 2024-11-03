@@ -6,9 +6,7 @@ NotPX Bot
 
 
 class BaseBotSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env", env_ignore_empty=True, extra="allow"
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_ignore_empty=True, extra="allow")
 
     API_ID: int
     API_HASH: str
@@ -72,7 +70,10 @@ class Settings(BaseBotSettings):
         "#6D482F",  # rgb(109, 72, 47)
         "#000000",  # rgb(0, 0, 0)
     ]
-    TEMPLATE_ID: int = 6989019093
+    TEMPLATE_ID: int = 6476501580
+    REPAINT_COLOR_FOR_TEMPLATE: str = "#000000"
+    AREA_TO_REPAINT_X: tuple[int, int] = 529, 553
+    AREA_TO_REPAINT_Y: tuple[int, int] = 872, 934
     task_ids: list[str] = {
         "leagueBonusSilver",
         "leagueBonusGold",
