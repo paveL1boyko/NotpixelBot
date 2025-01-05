@@ -38,7 +38,7 @@ class User(BaseModel):
     id: int
     firstName: str
     lastName: str
-    balance: int
+    balance: float
     repaints: int
     score: int | None = None
     language: str
